@@ -53,6 +53,19 @@ JazzRecord.Record = function(options) {
   JazzRecord.each(this.options.model.options.recordMethods, function(method, name) {
     this[name] = method;
   }, this);
+
+  var extra = {};
+  extra[this.options.model.options.foreignKey || this.options.model.options.table.replace(/s$/,'')]  = this.id;
+  JazzRecord.each(JazzRecord.shallowMerge(this.options.model.options.hasMany, this.options.model.options.hasOne), function(value, name) {
+    var method =  name.replace(/./, function(c){ return c.toUpperCase() });
+    if(method[method.length-1] == 's') method=method.replace(/s$/,'');
+    this['new'+method] = function(args) {
+      return JazzRecord.models.data[name].newRecord(JazzRecord.shallowMerge(args, extra));
+    };
+    this['create'+method] = function(args) {
+      return JazzRecord.models.data[name].createRecord(JazzRecord.shallowMerge(args, extra));
+    };
+  }, this);
   
 };
 
